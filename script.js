@@ -8,9 +8,9 @@ const speakingText = document.getElementById("speakingText");
 const avatarStatus = document.getElementById("avatarStatus");
 
 
-// ==========================================
+// ================================
 // MESSAGE
-// ==========================================
+// ================================
 
 function addMessage(type, text) {
 
@@ -31,13 +31,11 @@ function addMessage(type, text) {
             ? "СІЗ"
             : "QAZAQ AI";
 
-
     const bubble = document.createElement("div");
 
     bubble.className = "bubble";
 
     bubble.textContent = text;
-
 
     message.appendChild(label);
     message.appendChild(bubble);
@@ -48,9 +46,9 @@ function addMessage(type, text) {
 }
 
 
-// ==========================================
+// ================================
 // TYPING
-// ==========================================
+// ================================
 
 function showTyping() {
 
@@ -80,8 +78,7 @@ function showTyping() {
 
 function removeTyping() {
 
-    const typing =
-        document.getElementById("typing");
+    const typing = document.getElementById("typing");
 
     if (typing) {
         typing.remove();
@@ -89,9 +86,9 @@ function removeTyping() {
 }
 
 
-// ==========================================
-// AVATAR STATE
-// ==========================================
+// ================================
+// AVATAR
+// ================================
 
 function setAvatarState(state) {
 
@@ -103,37 +100,28 @@ function setAvatarState(state) {
 
     avatarPanel.classList.add(state);
 
-
     if (state === "thinking") {
 
-        avatarStatus.innerHTML = `
-            <span></span>
-            ОЙЛАНУДА
-        `;
+        avatarStatus.innerHTML =
+            "<span></span> ОЙЛАНУДА";
 
         speakingText.textContent =
             "Жауапты дайындап жатырмын...";
     }
 
-
     if (state === "speaking") {
 
-        avatarStatus.innerHTML = `
-            <span></span>
-            СӨЙЛЕП ТҰР
-        `;
+        avatarStatus.innerHTML =
+            "<span></span> СӨЙЛЕП ТҰР";
 
         speakingText.textContent =
             "Жауапты айтып жатырмын...";
     }
 
-
     if (state === "ready") {
 
-        avatarStatus.innerHTML = `
-            <span></span>
-            ONLINE
-        `;
+        avatarStatus.innerHTML =
+            "<span></span> ONLINE";
 
         speakingText.textContent =
             "Сұрағыңызды күтіп тұрмын";
@@ -141,55 +129,33 @@ function setAvatarState(state) {
 }
 
 
-// ==========================================
-// SEND MESSAGE
-// ==========================================
+// ================================
+// SEND
+// ================================
 
 async function sendMessage() {
 
     const question = input.value.trim();
 
-    // Бос болса жібермейміз
     if (!question) {
-
         input.focus();
-
         return;
     }
 
-
-    // Батырманы уақытша өшіру
     sendButton.disabled = true;
-
-    sendButton.style.opacity = "0.6";
-
-    sendButton.style.cursor = "wait";
-
-
-    // Сұрақты көрсету
 
     addMessage(
         "user",
         question
     );
 
-
-    // Input тазалау
-
     input.value = "";
-
-
-    // AI ойлануда
 
     setAvatarState("thinking");
 
     showTyping();
 
-
     try {
-
-        console.log("QAZAQ AI сұраныс жіберілуде:", question);
-
 
         const response = await fetch(
             "/chat",
@@ -197,8 +163,7 @@ async function sendMessage() {
                 method: "POST",
 
                 headers: {
-                    "Content-Type":
-                        "application/json"
+                    "Content-Type": "application/json"
                 },
 
                 body: JSON.stringify({
@@ -207,71 +172,32 @@ async function sendMessage() {
             }
         );
 
-
-        console.log(
-            "Server status:",
-            response.status
-        );
-
-
-        // JSON оқу
-
-        const data =
-            await response.json();
-
-
-        console.log(
-            "Server response:",
-            data
-        );
-
+        const data = await response.json();
 
         removeTyping();
-
-
-        // Сервер қатесі
 
         if (!response.ok) {
 
             throw new Error(
                 data.answer ||
-                data.error ||
-                "Сервер қатесі: " +
-                response.status
+                "Сервер қатесі: " + response.status
             );
-
         }
-
 
         const answer =
             data.answer ||
             "Жауап алынбады.";
-
-
-        // AI жауабын көрсету
 
         addMessage(
             "ai",
             answer
         );
 
-
-        // Сөйлеу
-
-        setAvatarState(
-            "speaking"
-        );
-
+        setAvatarState("speaking");
 
         await speak(answer);
 
-
-        // Дайын
-
-        setAvatarState(
-            "ready"
-        );
-
+        setAvatarState("ready");
 
     }
 
@@ -282,209 +208,127 @@ async function sendMessage() {
             error
         );
 
-
         removeTyping();
-
 
         addMessage(
             "ai",
-            "Кешіріңіз, қате пайда болды.\n\n" +
+            "Кешіріңіз, қате пайда болды:\n\n" +
             error.message
         );
 
-
-        setAvatarState(
-            "ready"
-        );
-
+        setAvatarState("ready");
     }
-
 
     finally {
 
-        // Батырманы қайта қосу
-
         sendButton.disabled = false;
 
-        sendButton.style.opacity = "1";
-
-        sendButton.style.cursor = "pointer";
-
-
         input.focus();
-
     }
 }
 
 
-// ==========================================
-// SEND BUTTON
-// ==========================================
+// ================================
+// BUTTON
+// ================================
 
-if (sendButton) {
+sendButton.addEventListener(
+    "click",
+    function(event) {
 
-    sendButton.addEventListener(
-        "click",
-        function(event) {
+        event.preventDefault();
+
+        sendMessage();
+    }
+);
+
+
+// ================================
+// ENTER
+// ================================
+
+input.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
 
             event.preventDefault();
 
-            console.log(
-                "➤ Кнопка басылды"
-            );
-
             sendMessage();
-
         }
-    );
-
-}
-
-
-// ==========================================
-// ENTER
-// ==========================================
-
-if (input) {
-
-    input.addEventListener(
-        "keydown",
-        function(event) {
-
-            if (event.key === "Enter") {
-
-                event.preventDefault();
-
-                sendMessage();
-
-            }
-
-        }
-    );
-
-}
+    }
+);
 
 
-// ==========================================
+// ================================
 // VOICE
-// ==========================================
+// ================================
 
 function speak(text) {
 
-    return new Promise(
-        function(resolve) {
+    return new Promise(function(resolve) {
 
-            if (
-                !("speechSynthesis" in window)
-            ) {
+        if (!("speechSynthesis" in window)) {
 
-                console.warn(
-                    "Бұл браузерде speechSynthesis жоқ."
-                );
+            resolve();
 
-                resolve();
+            return;
+        }
 
-                return;
-            }
+        speechSynthesis.cancel();
 
+        let speechText = text;
 
-            speechSynthesis.cancel();
+        speechText = speechText
+            .replace(/\n\n+/g, ". ")
+            .replace(/\n/g, ". ")
+            .replace(/,/g, ", ")
+            .replace(/\./g, ". ")
+            .replace(/!/g, "! ")
+            .replace(/\?/g, "? ");
 
-
-            /*
-             * Қазақша мәтінді табиғи оқуға
-             * дайындаймыз.
-             *
-             * Нүкте мен үтірден кейін
-             * кішкене кідіріс болады.
-             */
-
-            let speechText = text
-                .replace(/\n\n+/g, ". ")
-                .replace(/\n/g, ". ")
-                .replace(/:/g, ": ")
-                .replace(/;/g, "; ")
-                .replace(/,/g, ", ")
-                .replace(/\./g, ". ")
-                .replace(/!/g, "! ")
-                .replace(/\?/g, "? ");
-
-
-            const speech =
-                new SpeechSynthesisUtterance(
-                    speechText
-                );
-
-
-            // Қазақ тілі
-
-            speech.lang = "kk-KZ";
-
-
-            /*
-             * Бұрынғы 0.88 тым жылдам сезілуі мүмкін.
-             */
-
-            speech.rate = 0.72;
-
-
-            /*
-             * Дауысты табиғи ұстау
-             */
-
-            speech.pitch = 1.0;
-
-
-            speech.volume = 1;
-
-
-            speech.onstart =
-                function() {
-
-                    setAvatarState(
-                        "speaking"
-                    );
-
-                };
-
-
-            speech.onend =
-                function() {
-
-                    resolve();
-
-                };
-
-
-            speech.onerror =
-                function(error) {
-
-                    console.error(
-                        "VOICE ERROR:",
-                        error
-                    );
-
-                    resolve();
-
-                };
-
-
-            speechSynthesis.speak(
-                speech
+        const speech =
+            new SpeechSynthesisUtterance(
+                speechText
             );
 
-        }
-    );
+        speech.lang = "kk-KZ";
+
+        speech.rate = 0.72;
+
+        speech.pitch = 1.0;
+
+        speech.volume = 1;
+
+        speech.onstart = function() {
+
+            setAvatarState("speaking");
+        };
+
+        speech.onend = function() {
+
+            resolve();
+        };
+
+        speech.onerror = function() {
+
+            resolve();
+        };
+
+        speechSynthesis.speak(
+            speech
+        );
+    });
 }
 
 
-// ==========================================
+// ================================
 // NEW CHAT
-// ==========================================
+// ================================
 
 const newChatButton =
     document.querySelector(".new-chat");
-
 
 if (newChatButton) {
 
@@ -492,18 +336,9 @@ if (newChatButton) {
         "click",
         function() {
 
-            if (
-                "speechSynthesis"
-                in window
-            ) {
-
-                speechSynthesis.cancel();
-
-            }
-
+            speechSynthesis.cancel();
 
             messages.innerHTML = "";
-
 
             addMessage(
                 "ai",
@@ -517,47 +352,32 @@ if (newChatButton) {
 сұрағыңызды қойыңыз.`
             );
 
-
-            setAvatarState(
-                "ready"
-            );
-
+            setAvatarState("ready");
         }
     );
-
 }
 
 
-// ==========================================
-// DOUBLE CLICK AVATAR TEST
-// ==========================================
+// ================================
+// TEST VOICE
+// ================================
 
 function testTalking() {
 
     const testText =
         "Сәлем! Мен QAZAQ AI ассистентімін. Қазақ халқының дәстүрі мен мәдениеті туралы айтып бере аламын.";
 
+    setAvatarState("speaking");
 
-    setAvatarState(
-        "speaking"
-    );
+    speak(testText).then(function() {
 
-
-    speak(testText)
-        .then(function() {
-
-            setAvatarState(
-                "ready"
-            );
-
-        });
-
+        setAvatarState("ready");
+    });
 }
 
 
 const girl =
     document.querySelector(".ai-girl");
-
 
 if (girl) {
 
@@ -565,13 +385,12 @@ if (girl) {
         "dblclick",
         testTalking
     );
-
 }
 
 
-// ==========================================
+// ================================
 // START
-// ==========================================
+// ================================
 
 addMessage(
     "ai",
@@ -585,8 +404,5 @@ addMessage(
 сұрағыңызды қойыңыз.`
 );
 
-
-setAvatarState(
-    "ready"
-);
+setAvatarState("ready");
 ```
