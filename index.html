@@ -1,326 +1,325 @@
-```html
 <!DOCTYPE html>
+
 <html lang="kk">
 
 <head>
 
-    <meta charset="UTF-8">
+```
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>QAZAQ AI</title>
+<title>QAZAQ AI</title>
 
-    <link
-        rel="stylesheet"
-        href="/style.css"
-    >
+<link
+    rel="stylesheet"
+    href="/style.css"
+>
+```
 
 </head>
-
 
 <body>
 
 <div class="app">
 
+```
+<!-- SIDEBAR -->
 
-    <!-- ============================= -->
-    <!-- SIDEBAR -->
-    <!-- ============================= -->
+<aside class="sidebar">
 
-    <aside class="sidebar">
+    <div class="logo">
 
-        <div class="logo">
+        <div class="logo-symbol">
+            ✦
+        </div>
 
-            <div class="logo-symbol">
+        <div>
+
+            <div class="logo-title">
+                QAZAQ AI
+            </div>
+
+            <div class="logo-subtitle">
+                МӘДЕНИЕТ • ДӘСТҮР • ТАРИХ
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button
+        type="button"
+        class="new-chat"
+        id="newChatButton"
+    >
+        ＋ Жаңа әңгіме
+    </button>
+
+
+    <div class="menu active">
+        <span>⌂</span>
+        Басты бет
+    </div>
+
+    <div class="menu">
+        <span>❖</span>
+        Дәстүрлер
+    </div>
+
+    <div class="menu">
+        <span>♞</span>
+        Ұлттық ойындар
+    </div>
+
+    <div class="menu">
+        <span>♫</span>
+        Өнер және музыка
+    </div>
+
+
+    <div class="sidebar-bottom">
+
+        🇰🇿 Қазақ халқының
+        мәдениеті мен дәстүрін
+        жасанды интеллект арқылы
+        таныңыз.
+
+    </div>
+
+</aside>
+
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div>
+
+            <div class="header-title">
+                QAZAQ AI
+            </div>
+
+            <div class="online">
+
+                <span></span>
+
+                AI ассистент онлайн
+
+            </div>
+
+        </div>
+
+
+        <div class="language">
+            ҚАЗАҚША
+        </div>
+
+    </header>
+
+
+
+    <!-- CONTENT -->
+
+    <section class="content">
+
+
+        <!-- CHAT -->
+
+        <div class="chat-panel">
+
+
+            <div class="welcome">
+
+                <div class="welcome-icon">
+                    🇰🇿
+                </div>
+
+                <h1>
+                    Қазақ мәдениетін
+                    бірге танып білейік
+                </h1>
+
+                <p>
+                    Дәстүр, тарих, ұлттық ойындар,
+                    өнер және қазақ халқының
+                    мәдениеті туралы сұраңыз.
+                </p>
+
+            </div>
+
+
+
+            <!-- MESSAGES -->
+
+            <div
+                class="messages"
+                id="messages"
+            ></div>
+
+
+
+            <!-- INPUT -->
+
+            <div class="input-container">
+
+                <div class="input-area">
+
+                    <input
+                        type="text"
+                        placeholder="Мысалы: Көкпар деген не?"
+                        autocomplete="off"
+                        id="questionInput"
+                        aria-label="Сұрақ енгізу"
+                    >
+
+
+                    <button
+                        type="button"
+                        class="send"
+                        id="sendButton"
+                        aria-label="Сұрақты жіберу"
+                    >
+                        ➤
+                    </button>
+
+                </div>
+
+
+                <div class="input-hint">
+
+                    Enter — жіберу
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- AI GIRL -->
+
+        <div class="avatar-panel">
+
+
+            <div class="ornament ornament-1">
+                ❖
+            </div>
+
+            <div class="ornament ornament-2">
+                ❖
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div
+                class="avatar-status"
+                id="avatarStatus"
+            >
+
+                <span></span>
+
+                ONLINE
+
+            </div>
+
+
+
+            <!-- CHARACTER -->
+
+            <div class="avatar-wrapper">
+
+                <div class="avatar-glow"></div>
+
+
+                <div class="ai-character">
+
+                    <img
+                        src="/ai-girl.png"
+                        class="ai-girl"
+                        alt="QAZAQ AI"
+                    >
+
+
+                    <!-- MOUTH -->
+
+                    <div class="mouth">
+
+                        <span></span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- SPEAKING -->
+
+            <div class="speaking">
+
+                <div class="sound-wave">
+
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <i></i>
+
+                </div>
+
+
+                <span id="speakingText">
+
+                    Сұрағыңызды күтіп тұрмын
+
+                </span>
+
+            </div>
+
+
+
+            <div class="culture-badge">
+
                 ✦
-            </div>
 
-            <div>
-
-                <div class="logo-title">
-                    QAZAQ AI
-                </div>
-
-                <div class="logo-subtitle">
-                    МӘДЕНИЕТ • ДӘСТҮР • ТАРИХ
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <button class="new-chat">
-            ＋ Жаңа әңгіме
-        </button>
-
-
-        <div class="menu active">
-            <span>⌂</span>
-            Басты бет
-        </div>
-
-        <div class="menu">
-            <span>❖</span>
-            Дәстүрлер
-        </div>
-
-        <div class="menu">
-            <span>♞</span>
-            Ұлттық ойындар
-        </div>
-
-        <div class="menu">
-            <span>♫</span>
-            Өнер және музыка
-        </div>
-
-
-        <div class="sidebar-bottom">
-
-            🇰🇿 Қазақ халқының
-            мәдениеті мен дәстүрін
-            жасанды интеллект арқылы
-            таныңыз.
-
-        </div>
-
-    </aside>
-
-
-
-    <!-- ============================= -->
-    <!-- MAIN -->
-    <!-- ============================= -->
-
-    <main class="main">
-
-
-        <!-- HEADER -->
-
-        <header class="header">
-
-            <div>
-
-                <div class="header-title">
-                    QAZAQ AI
-                </div>
-
-                <div class="online">
-
-                    <span></span>
-
-                    AI ассистент онлайн
-
-                </div>
+                <span>
+                    Қазақ мәдениеті
+                </span>
 
             </div>
 
 
-            <div class="language">
-                ҚАЗАҚША
-            </div>
+        </div>
 
-        </header>
 
+    </section>
 
-
-        <!-- ============================= -->
-        <!-- CONTENT -->
-        <!-- ============================= -->
-
-        <section class="content">
-
-
-            <!-- ========================= -->
-            <!-- CHAT -->
-            <!-- ========================= -->
-
-            <div class="chat-panel">
-
-
-                <div class="welcome">
-
-                    <div class="welcome-icon">
-                        🇰🇿
-                    </div>
-
-                    <h1>
-                        Қазақ мәдениетін
-                        бірге танып білейік
-                    </h1>
-
-                    <p>
-                        Дәстүр, тарих, ұлттық ойындар,
-                        өнер және қазақ халқының
-                        мәдениеті туралы сұраңыз.
-                    </p>
-
-                </div>
-
-
-
-                <!-- MESSAGES -->
-
-                <div
-                    class="messages"
-                    id="messages"
-                ></div>
-
-
-
-                <!-- INPUT -->
-
-                <div class="input-container">
-
-                    <div class="input-area">
-
-                        <input
-                            type="text"
-                            placeholder="Мысалы: Көкпар деген не?"
-                            autocomplete="off"
-                            id="questionInput"
-                        >
-
-
-                        <button
-                            class="send"
-                            id="sendButton"
-                        >
-                            ➤
-                        </button>
-
-                    </div>
-
-
-                    <div class="input-hint">
-
-                        Enter — жіберу
-
-                    </div>
-
-                </div>
-
-
-            </div>
-
-
-
-            <!-- ========================= -->
-            <!-- AI GIRL -->
-            <!-- ========================= -->
-
-            <div class="avatar-panel">
-
-
-                <div class="ornament ornament-1">
-                    ❖
-                </div>
-
-                <div class="ornament ornament-2">
-                    ❖
-                </div>
-
-
-                <!-- STATUS -->
-
-                <div
-                    class="avatar-status"
-                    id="avatarStatus"
-                >
-
-                    <span></span>
-
-                    ONLINE
-
-                </div>
-
-
-
-                <!-- CHARACTER -->
-
-                <div class="avatar-wrapper">
-
-                    <div class="avatar-glow"></div>
-
-
-                    <div class="ai-character">
-
-                        <img
-                            src="/ai-girl.png"
-                            class="ai-girl"
-                            alt="QAZAQ AI"
-                        >
-
-
-                        <!-- MOUTH -->
-
-                        <div class="mouth">
-
-                            <span></span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-
-                <!-- SPEAKING -->
-
-                <div class="speaking">
-
-                    <div class="sound-wave">
-
-                        <i></i>
-                        <i></i>
-                        <i></i>
-                        <i></i>
-                        <i></i>
-                        <i></i>
-                        <i></i>
-
-                    </div>
-
-
-                    <span id="speakingText">
-
-                        Сұрағыңызды күтіп тұрмын
-
-                    </span>
-
-                </div>
-
-
-
-                <div class="culture-badge">
-
-                    ✦
-
-                    <span>
-                        Қазақ мәдениеті
-                    </span>
-
-                </div>
-
-
-            </div>
-
-
-        </section>
-
-    </main>
+</main>
+```
 
 </div>
 
+<!-- JAVASCRIPT -->
 
 <script src="/script.js"></script>
 
 </body>
 
 </html>
-```
