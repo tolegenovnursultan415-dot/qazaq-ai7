@@ -47,11 +47,10 @@ def generate_ai_answer(question):
     if not client:
         return "GEMINI_API_KEY табылмады немесе қате енгізілген."
 
-    # Жұмыс істейтін Gemini модельдерінің тізімі
-    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]
+    # Жұмыс істейтін басты модель
+    model_name = "gemini-2.0-flash"
     
-    last_error = ""
-    for model_name in models_to_try:
+    for attempt in range(3):
         try:
             response = client.models.generate_content(
                 model=model_name,
@@ -64,12 +63,14 @@ def generate_ai_answer(question):
             )
             if response and response.text:
                 return response.text.strip()
+            return "Кешіріңіз, AI бұл сұраққа жауап дайындай алмады."
         except Exception as error:
-            last_error = str(error)
-            print(f"Model {model_name} failed: {last_error}")
-            continue
-
-    return f"AI қатесі: {last_error}"
+            error_text = str(error)
+            print(f"Gemini API Error (attempt {attempt+1}):", error_text)
+            if ("503" in error_text or "UNAVAILABLE" in error_text) and attempt < 2:
+                time.sleep(1)
+                continue
+            return f"AI қатесі: {error_text}"
 
 @app.route("/chat", methods=["POST"])
 def chat():
