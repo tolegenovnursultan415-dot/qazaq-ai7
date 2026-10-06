@@ -78,9 +78,9 @@ INSTRUCTIONS = """
 def generate_ai_answer(question):
     for attempt in range(3):
         try:
-            # Соңғы ресми қолданыстағы модель
+            # Тұрақты жұмыс істейтін өндірістік модель
             response = client.models.generate_content(
-                model="gemini-3.8-flash",
+                model="gemini-1.5-flash",
                 contents=question,
                 config=types.GenerateContentConfig(
                     system_instruction=INSTRUCTIONS,
