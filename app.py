@@ -1,8 +1,5 @@
 import os
 import time
-import base64
-import asyncio
-import re
 import truststore
 
 truststore.inject_into_ssl()
@@ -11,7 +8,6 @@ from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-import edge_tts
 
 load_dotenv()
 
@@ -22,36 +18,6 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 
 app = Flask(__name__)
-
-async def _tts_async(text):
-    clean_text = re.sub(r'[\*\_\~\#\`\/\-\+\=\>\<\(\)\[\]\{\}]', ' ', text)
-    clean_text = re.sub(r'([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])', '', clean_text)
-    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
-
-    if not clean_text:
-        return None
-
-    communicate = edge_tts.Communicate(clean_text, "kk-KZ-AigulNeural")
-    audio_data = bytearray()
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_data.extend(chunk["data"])
-
-    if audio_data:
-        return base64.b64encode(audio_data).decode('utf-8')
-    return None
-
-def generate_speech_base64(text):
-    try:
-        # Event loop-ты қауіпсіз шақыру
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(_tts_async(text))
-        loop.close()
-        return result
-    except Exception as e:
-        print("TTS Қатесі:", e)
-        return None
 
 @app.route("/")
 def home():
@@ -115,16 +81,15 @@ def chat():
 
         question = data.get("question", "").strip()
         answer = generate_ai_answer(question)
-        audio_base64 = generate_speech_base64(answer)
 
         return jsonify({
-            "answer": answer,
-            "audio": audio_base64
+            "answer": answer
         })
 
     except Exception as error:
         print("FLASK ERROR:", error)
         return jsonify({"answer": f"Сервер қатесі: {str(error)}"}), 500
 
+# Vercel үшін маңызды
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)
