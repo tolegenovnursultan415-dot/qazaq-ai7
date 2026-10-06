@@ -1679,4 +1679,35 @@ body {
     }
 
 }
-```
+/* ==========================================
+   AVATAR SPEAKING ANIMATION (МИМИКА / ЕРІН ҚИМЫЛЫ)
+   ========================================== */
+
+/* AI сөйлеген кезде аватар суретінің ырғақпен қозғалуы */
+.avatar-panel.speaking .ai-girl {
+    animation: avatarSpeak 0.35s infinite alternate ease-in-out;
+}
+
+/* Ырғақты сөйлеу пульсациясы мен мимика эффектісі */
+@keyframes avatarSpeak {
+    0% {
+        transform: scale(1) translateY(0);
+        filter: drop-shadow(0 0 15px rgba(0, 255, 200, 0.6));
+    }
+    100% {
+        transform: scale(1.04) translateY(-3px);
+        filter: drop-shadow(0 0 25px rgba(0, 255, 200, 0.9));
+    }
+}
+
+/* Сөйлеп тұрғанда индикатордың жыпылықтауы */
+.avatar-panel.speaking .avatar-status span {
+    background-color: #00ffc8;
+    box-shadow: 0 0 10px #00ffc8;
+    animation: blink 0.5s infinite alternate;
+}
+
+@keyframes blink {
+    from { opacity: 0.4; }
+    to { opacity: 1; }
+}```
