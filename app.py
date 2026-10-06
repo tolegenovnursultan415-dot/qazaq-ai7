@@ -62,58 +62,44 @@ def javascript():
 def ai_girl():
     return send_from_directory(".", "ai-girl.png", mimetype="image/png")
 
+# Егер ai-girl-open.png файлы жоқ болса, қате бермес үшін:
+@app.route("/ai-girl-open.png")
+def ai_girl_open():
+    if os.path.exists("ai-girl-open.png"):
+        return send_from_directory(".", "ai-girl-open.png", mimetype="image/png")
+    return send_from_directory(".", "ai-girl.png", mimetype="image/png")
+
 INSTRUCTIONS = """
 Сенің атың — QAZAQ AI.
-Сен қазақ халқының мәдениеті, тарихы, салт-дәстүрі, әдет-ғұрпы және ұлттық құндылықтары туралы түсіндіретін заманауи қазақша интеллектуалды ассистентсің.
-НЕГІЗГІ МІНДЕТІҢ: Пайдаланушының сұрағына қазақ тілінде пайдалы, түсінікті, қызықты және толық жауап беру.
-ТІЛ: Әрқашан қазақ тілінде жауап бер.
-ЖАУАП СТИЛІ: Қарапайым әрі табиғи қазақ тілін қолдан.
-"""
+Сен қазақ халқының мәдениеті, тарихы, салт-дәстүрі және ұлттық құндылықтары туралы интеллектуалды ассистентсің.
 
-def contains_internal_text(text):
-    forbidden_phrases = ["System Instructions", "Internal review", "Developer instruction"]
-    text_lower = text.lower()
-    for phrase in forbidden_phrases:
-        if phrase.lower() in text_lower:
-            return True
-    return False
+МАҢЫЗДЫ ЕРЕЖЕ: Пайдаланушы сұрағына тек қазақ тілінде, МҮМКІНДІГІНШЕ ҚЫСҚА, НАҚТЫ ӘРІ ТҮСІНІКТІ (максимум 2-3 сөйлеммен) жауап бер.
+"""
 
 def generate_ai_answer(question):
     for attempt in range(3):
         try:
+            # Кеңінен тараған стабильді модель қолданылады
             response = client.models.generate_content(
-                model="gemini-3.6-flash",
+                model="gemini-2.0-flash",
                 contents=question,
                 config=types.GenerateContentConfig(
                     system_instruction=INSTRUCTIONS,
                     temperature=0.7,
-                    max_output_tokens=2500
+                    max_output_tokens=500
                 )
             )
             answer = response.text
             if not answer:
                 return "Кешіріңіз, AI бұл сұраққа жауап дайындай алмады."
-
-            answer = answer.strip()
-            if contains_internal_text(answer):
-                retry_prompt = f"Пайдаланушы сұрағына ғана жауап бер:\n{question}"
-                response = client.models.generate_content(
-                    model="gemini-3.6-flash",
-                    contents=retry_prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=INSTRUCTIONS,
-                        temperature=0.7,
-                        max_output_tokens=2500
-                    )
-                )
-                answer = response.text.strip()
-            return answer
+            return answer.strip()
         except Exception as error:
             error_text = str(error)
             if ("503" in error_text or "UNAVAILABLE" in error_text) and attempt < 2:
-                time.sleep(2)
+                time.sleep(1)
                 continue
-            return "Қазір AI жауап бере алмады. Бірнеше секундтан кейін қайта көріңіз."
+            print("Gemini API Error:", error_text)
+            return f"Қате пайда болды: {error_text}"
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -133,7 +119,7 @@ def chat():
 
     except Exception as error:
         print("FLASK ERROR:", error)
-        return jsonify({"answer": "Серверде қате пайда болды."}), 500
+        return jsonify({"answer": f"Сервер қатесі: {str(error)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)
