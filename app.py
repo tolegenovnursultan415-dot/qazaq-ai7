@@ -62,7 +62,6 @@ def javascript():
 def ai_girl():
     return send_from_directory(".", "ai-girl.png", mimetype="image/png")
 
-# Егер ai-girl-open.png файлы жоқ болса, қате бермес үшін:
 @app.route("/ai-girl-open.png")
 def ai_girl_open():
     if os.path.exists("ai-girl-open.png"):
@@ -79,14 +78,14 @@ INSTRUCTIONS = """
 def generate_ai_answer(question):
     for attempt in range(3):
         try:
-            # Кеңінен тараған стабильді модель қолданылады
+            # Соңғы ресми қолданыстағы модель
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-3.8-flash",
                 contents=question,
                 config=types.GenerateContentConfig(
                     system_instruction=INSTRUCTIONS,
                     temperature=0.7,
-                    max_output_tokens=500
+                    max_output_tokens=400
                 )
             )
             answer = response.text
@@ -99,7 +98,7 @@ def generate_ai_answer(question):
                 time.sleep(1)
                 continue
             print("Gemini API Error:", error_text)
-            return f"Қате пайда болды: {error_text}"
+            return "Қазір AI жауап бере алмады. Біраз уақыттан кейін қайта көріңіз."
 
 @app.route("/chat", methods=["POST"])
 def chat():
