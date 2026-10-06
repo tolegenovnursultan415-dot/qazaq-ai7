@@ -1,6 +1,5 @@
 Flask
-google-genai
 python-dotenv
-truststore
+google-genai
 edge-tts
-gunicorn
+truststore
