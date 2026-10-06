@@ -1,5 +1,3 @@
 Flask
 python-dotenv
 google-genai
-edge-tts
-truststore
