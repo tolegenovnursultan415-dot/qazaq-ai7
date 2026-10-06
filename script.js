@@ -1,3 +1,4 @@
+// Элементтерді алу
 const input = document.getElementById("questionInput");
 const sendButton = document.getElementById("sendButton");
 const messages = document.getElementById("messages");
@@ -6,9 +7,10 @@ const avatarPanel = document.querySelector(".avatar-panel");
 const speakingText = document.getElementById("speakingText");
 const avatarStatus = document.getElementById("avatarStatus");
 
-let currentAudio = null;
-
+// Мессадж қосу функциясы
 function addMessage(type, text) {
+    if (!messages) return;
+    
     const message = document.createElement("div");
     message.className = "message";
     if (type === "user") message.classList.add("user");
@@ -27,7 +29,9 @@ function addMessage(type, text) {
     messages.scrollTop = messages.scrollHeight;
 }
 
+// AI жауап дайындап жатқандағы индикатор
 function showTyping() {
+    if (!messages) return;
     const typing = document.createElement("div");
     typing.id = "typing";
     typing.className = "message";
@@ -48,6 +52,7 @@ function removeTyping() {
     if (typing) typing.remove();
 }
 
+// Аватар күйін ауыстыру
 function setAvatarState(state) {
     if (!avatarPanel) return;
     avatarPanel.classList.remove("thinking", "speaking", "ready");
@@ -56,56 +61,51 @@ function setAvatarState(state) {
     if (state === "thinking") {
         if (avatarStatus) avatarStatus.innerHTML = `<span></span> ОЙЛАНУДА`;
         if (speakingText) speakingText.textContent = "Жауапты дайындап жатырмын...";
-    }
-    if (state === "speaking") {
+    } else if (state === "speaking") {
         if (avatarStatus) avatarStatus.innerHTML = `<span></span> SPEAKING`;
         if (speakingText) speakingText.textContent = "Жауапты айтып жатырмын...";
-    }
-    if (state === "ready") {
+    } else if (state === "ready") {
         if (avatarStatus) avatarStatus.innerHTML = `<span></span> ONLINE`;
         if (speakingText) speakingText.textContent = "Сұрағыңызды күтіп тұрмын";
     }
 }
 
-function playAudioBase64(base64Audio) {
+// Браузерлік дауыстау (Web Speech API)
+function speakText(text) {
     return new Promise((resolve) => {
-        if (!base64Audio) {
+        if (!('speechSynthesis' in window)) {
+            console.warn("Бұл браузерде Web Speech API қолдау таппайды.");
             resolve();
             return;
         }
 
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
-        }
+        // Бұрынғы сөйлеп жатқан дауысты тоқтату
+        window.speechSynthesis.cancel();
 
-        const audio = new Audio("data:audio/mp3;base64," + base64Audio);
-        currentAudio = audio;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'kk-KZ'; // Қазақ тілінің коды
+        utterance.rate = 1.0;     // Сөйлеу жылдамдығы
 
-        audio.onended = () => {
-            currentAudio = null;
+        utterance.onend = () => {
             resolve();
         };
 
-        audio.onerror = (e) => {
-            console.error("Audio қатесі:", e);
-            currentAudio = null;
+        utterance.onerror = (e) => {
+            console.error("Дауыстау қатесі:", e);
             resolve();
         };
 
-        audio.play().catch((err) => {
-            console.warn("Автоплей бұғатталды:", err);
-            currentAudio = null;
-            resolve();
-        });
+        window.speechSynthesis.speak(utterance);
     });
 }
 
+// Сұрақты серверге жіберу
 async function sendMessage() {
     if (!input) return;
     const question = input.value.trim();
     if (!question) return;
 
+    // Сұрақты экранға шығару және енгізу өрісін тазалау
     addMessage("user", question);
     input.value = "";
 
@@ -123,23 +123,21 @@ async function sendMessage() {
         removeTyping();
 
         if (!response.ok) {
-            throw new Error(data.answer || data.error || "Сервер қатесі");
+            throw new Error(data.answer || data.error || "Серверде қате орын алды");
         }
 
         const answer = data.answer || "Жауап алынбады.";
         addMessage("ai", answer);
 
-        if (data.audio) {
-            setAvatarState("speaking");
-            await playAudioBase64(data.audio);
-        }
-
+        // Жауапты дауыстап оқу
+        setAvatarState("speaking");
+        await speakText(answer);
         setAvatarState("ready");
 
     } catch (error) {
         console.error("Жіберу қатесі:", error);
         removeTyping();
-        addMessage("ai", "Қате пайда болды: " + error.message);
+        addMessage("ai", "Кешіріңіз, қате пайда болды: " + error.message);
         setAvatarState("ready");
     }
 }
@@ -158,12 +156,12 @@ if (input) {
     });
 }
 
+// Жаңа чат бастау батырмасы
 const newChatButton = document.getElementById("newChatButton");
 if (newChatButton) {
     newChatButton.addEventListener("click", function () {
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
         }
         if (messages) messages.innerHTML = "";
         addMessage("ai", `Сәлем! 👋\n\nМен — QAZAQ AI.\n\nҚазақ халқының дәстүрі, мәдениеті, тарихы және ұлттық ойындары туралы сұрағыңызды қойыңыз.`);
@@ -171,6 +169,6 @@ if (newChatButton) {
     });
 }
 
-// Алғашқы сәлемдесу
+// Бет жүктелгендегі алғашқы сәлемдесу
 addMessage("ai", `Сәлем! 👋\n\nМен — QAZAQ AI.\n\nҚазақ халқының дәстүрі, мәдениеті, тарихы және ұлттық ойындары туралы сұрағыңызды қойыңыз.`);
 setAvatarState("ready");
