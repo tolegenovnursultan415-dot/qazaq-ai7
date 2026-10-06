@@ -49,8 +49,9 @@ def generate_ai_answer(question):
 
     for attempt in range(3):
         try:
+            # Модель аты gemini-2.5-flash болып жаңартылды
             response = client.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-2.5-flash",
                 contents=question,
                 config=types.GenerateContentConfig(
                     system_instruction=INSTRUCTIONS,
