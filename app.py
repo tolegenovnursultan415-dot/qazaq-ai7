@@ -47,8 +47,8 @@ def generate_ai_answer(question):
     if not client:
         return "GEMINI_API_KEY табылмады немесе қате енгізілген."
 
-    # Жұмыс істейтін басты модель
-    model_name = "gemini-2.0-flash"
+    # Модель аталышы сунушталган gemini-3.8-flash катары жаңыртылды
+    model_name = "gemini-3.8-flash"
     
     for attempt in range(3):
         try:
