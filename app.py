@@ -47,29 +47,34 @@ def generate_ai_answer(question):
     if not client:
         return "GEMINI_API_KEY табылмады немесе қате енгізілген."
 
-    for attempt in range(3):
-        try:
-            # Модель аты gemini-2.5-flash болып жаңартылды
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=question,
-                config=types.GenerateContentConfig(
-                    system_instruction=INSTRUCTIONS,
-                    temperature=0.7,
-                    max_output_tokens=400
+    # Модельдер тізімі (біріншісі істемесе, келесісін байқап көреді)
+    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    
+    last_error = ""
+    for model_name in models_to_try:
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=question,
+                    config=types.GenerateContentConfig(
+                        system_instruction=INSTRUCTIONS,
+                        temperature=0.7,
+                        max_output_tokens=400
+                    )
                 )
-            )
-            answer = response.text
-            if not answer:
-                return "Кешіріңіз, AI бұл сұраққа жауап дайындай алмады."
-            return answer.strip()
-        except Exception as error:
-            error_text = str(error)
-            if ("503" in error_text or "UNAVAILABLE" in error_text) and attempt < 2:
-                time.sleep(1)
-                continue
-            print("Gemini API Error:", error_text)
-            return f"AI қатесі: {error_text}"
+                answer = response.text
+                if answer:
+                    return answer.strip()
+            except Exception as error:
+                last_error = str(error)
+                if ("503" in last_error or "UNAVAILABLE" in last_error) and attempt < 1:
+                    time.sleep(1)
+                    continue
+                print(f"Gemini API Error ({model_name}):", last_error)
+                break  # Келесі модельге өту
+
+    return f"AI қатесі: {last_error}"
 
 @app.route("/chat", methods=["POST"])
 def chat():
