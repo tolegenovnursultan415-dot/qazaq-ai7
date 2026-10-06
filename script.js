@@ -5,14 +5,9 @@ const messages = document.getElementById("messages");
 const avatarPanel = document.querySelector(".avatar-panel");
 const speakingText = document.getElementById("speakingText");
 const avatarStatus = document.getElementById("avatarStatus");
-const aiGirlImg = document.querySelector(".ai-girl"); // Аватар суреті
 
 let currentAudio = null;
-let mouthInterval = null; // Ауыз мимикасының таймері
 
-// ==========================================
-// MESSAGE
-// ==========================================
 function addMessage(type, text) {
     const message = document.createElement("div");
     message.className = "message";
@@ -53,54 +48,24 @@ function removeTyping() {
     if (typing) typing.remove();
 }
 
-// ==========================================
-// AVATAR STATE & MOUTH ANIMATION
-// ==========================================
-function startMouthAnimation() {
-    if (!aiGirlImg) return;
-    let isOpen = false;
-    
-    // Ауызды 150ms сайын кезектестіріп ашып-жабу
-    mouthInterval = setInterval(() => {
-        isOpen = !isOpen;
-        aiGirlImg.src = isOpen ? "/ai-girl-open.png" : "/ai-girl.png";
-    }, 150);
-}
-
-function stopMouthAnimation() {
-    if (mouthInterval) {
-        clearInterval(mouthInterval);
-        mouthInterval = null;
-    }
-    if (aiGirlImg) {
-        aiGirlImg.src = "/ai-girl.png"; // Негізгі қалпына қайтару
-    }
-}
-
 function setAvatarState(state) {
     avatarPanel.classList.remove("thinking", "speaking", "ready");
     avatarPanel.classList.add(state);
 
     if (state === "thinking") {
-        stopMouthAnimation();
         avatarStatus.innerHTML = `<span></span> ОЙЛАНУДА`;
         speakingText.textContent = "Жауапты дайындап жатырмын...";
     }
     if (state === "speaking") {
-        startMouthAnimation(); // Сөйлегенде ауызды қозғалту
         avatarStatus.innerHTML = `<span></span> SPEAKING`;
         speakingText.textContent = "Жауапты айтып жатырмын...";
     }
     if (state === "ready") {
-        stopMouthAnimation(); // Сөйлеп болған соң тоқтату
         avatarStatus.innerHTML = `<span></span> ONLINE`;
         speakingText.textContent = "Сұрағыңызды күтіп тұрмын";
     }
 }
 
-// ==========================================
-// AUDIO PLAYBACK
-// ==========================================
 function playAudioBase64(base64Audio) {
     return new Promise((resolve) => {
         if (!base64Audio) {
@@ -130,9 +95,6 @@ function playAudioBase64(base64Audio) {
     });
 }
 
-// ==========================================
-// SEND MESSAGE
-// ==========================================
 async function sendMessage() {
     const question = input.value.trim();
     if (!question) return;
