@@ -1,5 +1,4 @@
 import os
-import time
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from google import genai
@@ -47,33 +46,23 @@ def generate_ai_answer(question):
     if not client:
         return "GEMINI_API_KEY табылмады немесе қате енгізілген."
 
-    # Gemini API-де қолжетімді модельдердің тізімі
-    candidate_models = [
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-2.5-flash"
-    ]
-    
-    last_error = ""
-    for model_name in candidate_models:
-        try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=question,
-                config=types.GenerateContentConfig(
-                    system_instruction=INSTRUCTIONS,
-                    temperature=0.7,
-                    max_output_tokens=400
-                )
+    try:
+        # Тек API талап етіп тұрған gemini-3.8-flash моделі
+        response = client.models.generate_content(
+            model="gemini-3.8-flash",
+            contents=question,
+            config=types.GenerateContentConfig(
+                system_instruction=INSTRUCTIONS,
+                temperature=0.7,
+                max_output_tokens=400
             )
-            if response and response.text:
-                return response.text.strip()
-        except Exception as error:
-            last_error = str(error)
-            print(f"Model {model_name} өтпеді: {last_error}")
-            continue
-
-    return f"AI қатесі: Ешқандай модель жауап бере алмады. Соңғы қате: {last_error}"
+        )
+        if response and response.text:
+            return response.text.strip()
+        return "Кешіріңіз, AI бұл сұраққа жауап дайындай алмады."
+    except Exception as error:
+        print("Gemini API Error:", error)
+        return f"AI қатесі: {str(error)}"
 
 @app.route("/chat", methods=["POST"])
 def chat():
