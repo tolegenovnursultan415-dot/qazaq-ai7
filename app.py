@@ -2,6 +2,7 @@ import os
 import time
 import base64
 import asyncio
+import re
 import truststore
 
 truststore.inject_into_ssl()
@@ -22,26 +23,32 @@ client = genai.Client(api_key=api_key)
 
 app = Flask(__name__)
 
-async def generate_speech_base64(text):
-    try:
-        import re
-        clean_text = re.sub(r'[\*\_\~\#\`\/\-\+\=\>\<\(\)\[\]\{\}]', ' ', text)
-        clean_text = re.sub(r'([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])', '', clean_text)
-        clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+async def _tts_async(text):
+    clean_text = re.sub(r'[\*\_\~\#\`\/\-\+\=\>\<\(\)\[\]\{\}]', ' ', text)
+    clean_text = re.sub(r'([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])', '', clean_text)
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
 
-        if not clean_text:
-            return None
-
-        communicate = edge_tts.Communicate(clean_text, "kk-KZ-AigulNeural")
-        
-        audio_data = bytearray()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_data.extend(chunk["data"])
-
-        if audio_data:
-            return base64.b64encode(audio_data).decode('utf-8')
+    if not clean_text:
         return None
+
+    communicate = edge_tts.Communicate(clean_text, "kk-KZ-AigulNeural")
+    audio_data = bytearray()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio_data.extend(chunk["data"])
+
+    if audio_data:
+        return base64.b64encode(audio_data).decode('utf-8')
+    return None
+
+def generate_speech_base64(text):
+    try:
+        # Event loop-ты қауіпсіз шақыру
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(_tts_async(text))
+        loop.close()
+        return result
     except Exception as e:
         print("TTS Қатесі:", e)
         return None
@@ -78,7 +85,6 @@ INSTRUCTIONS = """
 def generate_ai_answer(question):
     for attempt in range(3):
         try:
-            # Тұрақты жұмыс істейтін өндірістік модель
             response = client.models.generate_content(
                 model="gemini-1.5-flash",
                 contents=question,
@@ -105,11 +111,11 @@ def chat():
     try:
         data = request.get_json()
         if not data or not data.get("question", "").strip():
-            return jsonify({"answer": "Сұрақ жазыңыз."})
+            return jsonify({"answer": "Сұрақ жазыңыз."}), 400
 
         question = data.get("question", "").strip()
         answer = generate_ai_answer(question)
-        audio_base64 = asyncio.run(generate_speech_base64(answer))
+        audio_base64 = generate_speech_base64(answer)
 
         return jsonify({
             "answer": answer,
