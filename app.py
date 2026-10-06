@@ -62,12 +62,12 @@ def javascript():
 def ai_girl():
     return send_from_directory(".", "ai-girl.png", mimetype="image/png")
 
+# НАҚТЫ ЖӘНЕ ҚЫСҚА ЖАУАП БЕРУ НҰСҚАУЫ
 INSTRUCTIONS = """
 Сенің атың — QAZAQ AI.
-Сен қазақ халқының мәдениеті, тарихы, салт-дәстүрі, әдет-ғұрпы және ұлттық құндылықтары туралы түсіндіретін заманауи қазақша интеллектуалды ассистентсің.
-НЕГІЗГІ МІНДЕТІҢ: Пайдаланушының сұрағына қазақ тілінде пайдалы, түсінікті, қызықты және толық жауап беру.
-ТІЛ: Әрқашан қазақ тілінде жауап бер.
-ЖАУАП СТИЛІ: Қарапайым әрі табиғи қазақ тілін қолдан.
+Сен қазақ халқының мәдениеті, тарихы, салт-дәстүрі және ұлттық құндылықтары туралы интеллектуалды ассистентсің.
+
+МАҢЫЗДЫ ЕРЕЖЕ: Пайдаланушы сұрағына тек қазақ тілінде, МҮМКІНДІГІНШЕ ҚЫСҚА, НАҚТЫ ӘРІ ТҮСІНІКТІ (максимум 2-3 сөйлеммен) жауап бер. Артық ұзақ мәтін жазба.
 """
 
 def contains_internal_text(text):
@@ -81,13 +81,14 @@ def contains_internal_text(text):
 def generate_ai_answer(question):
     for attempt in range(3):
         try:
+            # Тез жұмыс істейтін модель мен шектеулі токен қолданылады
             response = client.models.generate_content(
-                model="gemini-3.6-flash",
+                model="gemini-2.5-flash",
                 contents=question,
                 config=types.GenerateContentConfig(
                     system_instruction=INSTRUCTIONS,
                     temperature=0.7,
-                    max_output_tokens=2500
+                    max_output_tokens=400  # Мәтін қысқа болып, аудио өте тез дайындалады
                 )
             )
             answer = response.text
@@ -96,14 +97,14 @@ def generate_ai_answer(question):
 
             answer = answer.strip()
             if contains_internal_text(answer):
-                retry_prompt = f"Пайдаланушы сұрағына ғана жауап бер:\n{question}"
+                retry_prompt = f"Пайдаланушы сұрағына қысқаша жауап бер:\n{question}"
                 response = client.models.generate_content(
-                    model="gemini-3.6-flash",
+                    model="gemini-2.5-flash",
                     contents=retry_prompt,
                     config=types.GenerateContentConfig(
                         system_instruction=INSTRUCTIONS,
                         temperature=0.7,
-                        max_output_tokens=2500
+                        max_output_tokens=400
                     )
                 )
                 answer = response.text.strip()
@@ -111,9 +112,9 @@ def generate_ai_answer(question):
         except Exception as error:
             error_text = str(error)
             if ("503" in error_text or "UNAVAILABLE" in error_text) and attempt < 2:
-                time.sleep(2)
+                time.sleep(1)
                 continue
-            return "Қазір AI жауап бере алмады. Бірнеше секундтан кейін қайта көріңіз."
+            return "Қазір AI жауап бере алмады. Қайта көріңіз."
 
 @app.route("/chat", methods=["POST"])
 def chat():
