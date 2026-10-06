@@ -1,9 +1,5 @@
 import os
 import time
-import truststore
-
-truststore.inject_into_ssl()
-
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from google import genai
@@ -12,10 +8,13 @@ from google.genai import types
 load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise RuntimeError("GEMINI_API_KEY табылмады.")
 
-client = genai.Client(api_key=api_key)
+client = None
+if api_key:
+    try:
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        print("Gemini Client initialization error:", e)
 
 app = Flask(__name__)
 
@@ -33,13 +32,9 @@ def javascript():
 
 @app.route("/ai-girl.png")
 def ai_girl():
-    return send_from_directory(".", "ai-girl.png", mimetype="image/png")
-
-@app.route("/ai-girl-open.png")
-def ai_girl_open():
-    if os.path.exists("ai-girl-open.png"):
-        return send_from_directory(".", "ai-girl-open.png", mimetype="image/png")
-    return send_from_directory(".", "ai-girl.png", mimetype="image/png")
+    if os.path.exists("ai-girl.png"):
+        return send_from_directory(".", "ai-girl.png", mimetype="image/png")
+    return jsonify({"error": "Image not found"}), 404
 
 INSTRUCTIONS = """
 Сенің атың — QAZAQ AI.
@@ -49,6 +44,9 @@ INSTRUCTIONS = """
 """
 
 def generate_ai_answer(question):
+    if not client:
+        return "GEMINI_API_KEY табылмады немесе қате енгізілген."
+
     for attempt in range(3):
         try:
             response = client.models.generate_content(
@@ -70,7 +68,7 @@ def generate_ai_answer(question):
                 time.sleep(1)
                 continue
             print("Gemini API Error:", error_text)
-            return "Қазір AI жауап бере алмады. Біраз уақыттан кейін қайта көріңіз."
+            return f"AI қатесі: {error_text}"
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -90,6 +88,5 @@ def chat():
         print("FLASK ERROR:", error)
         return jsonify({"answer": f"Сервер қатесі: {str(error)}"}), 500
 
-# Vercel үшін маңызды
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)
