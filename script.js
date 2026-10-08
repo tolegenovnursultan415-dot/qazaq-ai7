@@ -7,35 +7,45 @@ const avatarPanel = document.querySelector(".avatar-panel");
 const speakingText = document.getElementById("speakingText");
 const avatarStatus = document.getElementById("avatarStatus");
 
-// Дауыстар тізімін кэштеу
+// Дауыстар тізімін сақтау
 let availableVoices = [];
+let isAudioUnlocked = false;
 
+// Дауыстарды жүктеу
 function loadVoices() {
     if ('speechSynthesis' in window) {
         availableVoices = window.speechSynthesis.getVoices();
     }
 }
 
-// Браузерде дауыстар дайын болғанда жүктеу
 if ('speechSynthesis' in window) {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
 }
 
-// Мәтінді дауыстауға дайындау (Markdown, Emoji және артық белгілерді тазалау)
+// Мобильді браузердің авто-ойнату блогын ашу
+function unlockAudio() {
+    if (!isAudioUnlocked && 'speechSynthesis' in window) {
+        const dummyUtterance = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(dummyUtterance);
+        isAudioUnlocked = true;
+    }
+}
+
+// Мәтінді дауыстауға тазалау (Emoji, Markdown, артық символды құрту)
 function cleanTextForSpeech(text) {
     if (!text) return "";
     return text
-        .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') // Emoji тазалау
+        .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') // Emoji
         .replace(/\*\*(.*?)\*\*/g, '$1') // Bold ** **
         .replace(/\*(.*?)\*/g, '$1')     // Italic * *
-        .replace(/`{1,3}.*?`{1,3}/g, '') // Code blocks
-        .replace(/[#*_\-\\/~]/g, '')     // Артық арнайы белгілер
-        .replace(/\s+/g, ' ')           // Артық пробелдер
+        .replace(/`{1,3}.*?`{1,3}/g, '') // Code
+        .replace(/[#*_\-\\/~]/g, '')     // Арнайы белгілер
+        .replace(/\s+/g, ' ')           // Артық пробел
         .trim();
 }
 
-// Мессадж қосу функциясы
+// Чатқа хабарлама қосу
 function addMessage(type, text) {
     if (!messages) return;
     
@@ -57,7 +67,7 @@ function addMessage(type, text) {
     messages.scrollTop = messages.scrollHeight;
 }
 
-// AI жауап дайындап жатқандағы индикатор
+// Жауап күту индикаторы
 function showTyping() {
     if (!messages) return;
     const typing = document.createElement("div");
@@ -80,7 +90,7 @@ function removeTyping() {
     if (typing) typing.remove();
 }
 
-// Аватар күйін ауыстыру
+// Аватар күйін баптау
 function setAvatarState(state) {
     if (!avatarPanel) return;
     avatarPanel.classList.remove("thinking", "speaking", "ready");
@@ -98,7 +108,7 @@ function setAvatarState(state) {
     }
 }
 
-// Браузерлік дауыстау (Web Speech API) - Дұрысталған нұсқасы
+// Жақсартылған Табиғи Дауыстау Функциясы
 function speakText(rawText) {
     return new Promise((resolve) => {
         if (!('speechSynthesis' in window)) {
@@ -113,31 +123,40 @@ function speakText(rawText) {
             return;
         }
 
-        // Бұрынғы сөйлеп жатқан дауысты тоқтату
         window.speechSynthesis.cancel();
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
 
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        
+        // Табиғи интонация мен ырғақ параметрлері
         utterance.lang = 'kk-KZ';
-        utterance.rate = 0.95; // Сәл баяу, табиғирақ шығу үшін
-        utterance.pitch = 1.0;
+        utterance.rate = 0.85;  // Табиғи сөйлеу жылдамдығы
+        utterance.pitch = 1.1;   // Жұмсағырақ тембр
 
-        // Қолжетімді дауыстарды қайта жаңарту
         if (availableVoices.length === 0) {
             availableVoices = window.speechSynthesis.getVoices();
         }
 
-        // 1. Алдымен жүйедегі "kk" немесе "Kazakh" дауысын іздеу
-        let kazakhVoice = availableVoices.find(v => 
-            v.lang.includes('kk') || v.lang.includes('KK') || v.name.toLowerCase().includes('kazakh')
+        // Қазақша немесе оған ең жақын анық дауысты таңдау
+        let bestVoice = availableVoices.find(v => 
+            v.lang === 'kk-KZ' || v.lang === 'kk_KZ' || v.name.toLowerCase().includes('kazakh')
         );
 
-        // 2. Егер қазақша дауыс жоқ болса, Google-дың немесе стандартты Түркі/Орыс/Мұхит тілдерінің анық дауысын баптау
-        if (!kazakhVoice) {
-            kazakhVoice = availableVoices.find(v => v.lang.includes('ru') || v.lang.includes('tr'));
+        if (!bestVoice) {
+            bestVoice = availableVoices.find(v => v.lang.startsWith('kk'));
         }
 
-        if (kazakhVoice) {
-            utterance.voice = kazakhVoice;
+        if (!bestVoice) {
+            // Google немесе Apple жүйелеріндегі жақын модульдер
+            bestVoice = availableVoices.find(v => 
+                v.name.includes('Google') && (v.lang.includes('ru') || v.lang.includes('tr'))
+            );
+        }
+
+        if (bestVoice) {
+            utterance.voice = bestVoice;
         }
 
         utterance.onend = () => {
@@ -153,13 +172,14 @@ function speakText(rawText) {
     });
 }
 
-// Сұрақты серверге жіберу
+// Сұрақ жіберу
 async function sendMessage() {
     if (!input) return;
     const question = input.value.trim();
     if (!question) return;
 
-    // Сұрақты экранға шығару және енгізу өрісін тазалау
+    unlockAudio();
+
     addMessage("user", question);
     input.value = "";
 
@@ -183,7 +203,6 @@ async function sendMessage() {
         const answer = data.answer || "Жауап алынбады.";
         addMessage("ai", answer);
 
-        // Жауапты дауыстап оқу
         setAvatarState("speaking");
         await speakText(answer);
         setAvatarState("ready");
@@ -196,9 +215,10 @@ async function sendMessage() {
     }
 }
 
-// Оқиғаларды тіркеу (Event Listeners)
+// Event Listeners
 if (sendButton) {
     sendButton.addEventListener("click", sendMessage);
+    sendButton.addEventListener("touchstart", unlockAudio);
 }
 
 if (input) {
@@ -210,10 +230,11 @@ if (input) {
     });
 }
 
-// Жаңа чат бастау батырмасы
+// Жаңа чат
 const newChatButton = document.getElementById("newChatButton");
 if (newChatButton) {
     newChatButton.addEventListener("click", function () {
+        unlockAudio();
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
@@ -223,6 +244,6 @@ if (newChatButton) {
     });
 }
 
-// Бет жүктелгендегі алғашқы сәлемдесу
+// Алғашқы сәлемдесу
 addMessage("ai", `Сәлем! 👋\n\nМен — QAZAQ AI.\n\nҚазақ халқының дәстүрі, мәдениеті, тарихы және ұлттық ойындары туралы сұрағыңызды қойыңыз.`);
 setAvatarState("ready");
