@@ -7,6 +7,34 @@ const avatarPanel = document.querySelector(".avatar-panel");
 const speakingText = document.getElementById("speakingText");
 const avatarStatus = document.getElementById("avatarStatus");
 
+// Дауыстар тізімін кэштеу
+let availableVoices = [];
+
+function loadVoices() {
+    if ('speechSynthesis' in window) {
+        availableVoices = window.speechSynthesis.getVoices();
+    }
+}
+
+// Браузерде дауыстар дайын болғанда жүктеу
+if ('speechSynthesis' in window) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+// Мәтінді дауыстауға дайындау (Markdown, Emoji және артық белгілерді тазалау)
+function cleanTextForSpeech(text) {
+    if (!text) return "";
+    return text
+        .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') // Emoji тазалау
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Bold ** **
+        .replace(/\*(.*?)\*/g, '$1')     // Italic * *
+        .replace(/`{1,3}.*?`{1,3}/g, '') // Code blocks
+        .replace(/[#*_\-\\/~]/g, '')     // Артық арнайы белгілер
+        .replace(/\s+/g, ' ')           // Артық пробелдер
+        .trim();
+}
+
 // Мессадж қосу функциясы
 function addMessage(type, text) {
     if (!messages) return;
@@ -70,8 +98,8 @@ function setAvatarState(state) {
     }
 }
 
-// Браузерлік дауыстау (Web Speech API)
-function speakText(text) {
+// Браузерлік дауыстау (Web Speech API) - Дұрысталған нұсқасы
+function speakText(rawText) {
     return new Promise((resolve) => {
         if (!('speechSynthesis' in window)) {
             console.warn("Бұл браузерде Web Speech API қолдау таппайды.");
@@ -79,12 +107,38 @@ function speakText(text) {
             return;
         }
 
+        const textToSpeak = cleanTextForSpeech(rawText);
+        if (!textToSpeak) {
+            resolve();
+            return;
+        }
+
         // Бұрынғы сөйлеп жатқан дауысты тоқтату
         window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'kk-KZ'; // Қазақ тілінің коды
-        utterance.rate = 1.0;     // Сөйлеу жылдамдығы
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'kk-KZ';
+        utterance.rate = 0.95; // Сәл баяу, табиғирақ шығу үшін
+        utterance.pitch = 1.0;
+
+        // Қолжетімді дауыстарды қайта жаңарту
+        if (availableVoices.length === 0) {
+            availableVoices = window.speechSynthesis.getVoices();
+        }
+
+        // 1. Алдымен жүйедегі "kk" немесе "Kazakh" дауысын іздеу
+        let kazakhVoice = availableVoices.find(v => 
+            v.lang.includes('kk') || v.lang.includes('KK') || v.name.toLowerCase().includes('kazakh')
+        );
+
+        // 2. Егер қазақша дауыс жоқ болса, Google-дың немесе стандартты Түркі/Орыс/Мұхит тілдерінің анық дауысын баптау
+        if (!kazakhVoice) {
+            kazakhVoice = availableVoices.find(v => v.lang.includes('ru') || v.lang.includes('tr'));
+        }
+
+        if (kazakhVoice) {
+            utterance.voice = kazakhVoice;
+        }
 
         utterance.onend = () => {
             resolve();
